@@ -9,7 +9,9 @@
 	<Header />
 
 	<main>
-		<slot />
+		<div class="container">
+			<slot />
+		</div>
 	</main>
 
 	<Footer />
@@ -18,6 +20,11 @@
 <style>
 	main {
 		padding: 0 1rem;
+		margin: 0 auto;
+	}
+
+	.container {
+		max-width: 960px;
 		margin: 0 auto;
 	}
 </style>

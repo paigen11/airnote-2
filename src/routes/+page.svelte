@@ -31,6 +31,8 @@
 	<a href="https://shop.blues.io/products/airnote" class="btn" data-cy="buy-airnote-btn"
 		>Buy an Airnote</a
 	>
+
+	<hr />
 </section>
 
 <style>

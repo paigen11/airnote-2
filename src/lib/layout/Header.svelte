@@ -9,16 +9,15 @@
 	let menuOpen = false;
 	const toggleMenu = () => (menuOpen = !menuOpen);
 
-	export let url: string;
-	export let pin: string;
-	export let productUID: string;
-	export let deviceUID: string;
-	export let internalNav: boolean;
+	export let url: string = '';
+	export let pin: string = '';
+	export let productUID: string = '';
+	export let deviceUID: string = '';
+	export let internalNav: boolean = false;
 
 	onMount(async () => {
 		const location = window.location;
 		const currentDevice: AirnoteDevice = getCurrentDeviceFromUrl(location);
-		console.log(currentDevice);
 
 		url = '';
 		pin = currentDevice.pin ? currentDevice.pin : '';
