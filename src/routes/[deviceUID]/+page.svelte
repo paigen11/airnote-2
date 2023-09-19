@@ -1,7 +1,7 @@
-<script lang="{ts}">
-	export let pin;
-	export let productUID;
-	export let deviceUID;
+<script lang="ts">
+	export let pin = '';
+	export let productUID = '';
+	export let deviceUID = '';
 	let enableFields = false;
 	let error = false;
 	let errorType;

@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { format, parseISO } from 'date-fns';
-
 	import { DATE_TIME_FORMAT_KEY } from '$lib/constants';
-	import { Chart } from 'chart.js';
-	import type { ChartData, ChartConfiguration, ChartOptions } from 'chart.js/auto';
+	import Chart, { type ChartConfiguration, type ChartOptions, type ChartData } from 'chart.js/auto';
 	import type { AirnoteReading } from '$lib/services/AirReadingModel';
 	import type { ChartDataPointType } from '$lib/services/ChartModel';
 
@@ -50,7 +48,6 @@
 	}
 
 	const data: ChartData<'line' | 'bar', ChartDataPointType[], unknown> = {
-		// const data = {
 		datasets: [
 			{
 				label: 'Voltage (V)',

@@ -2,6 +2,7 @@
 	import { NotificationDisplay } from '@beyonk/svelte-notifications';
 	import { format } from 'date-fns';
 	import { unparse } from 'papaparse';
+	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	import CloseIcon from '$lib/icons/CloseIcon.svelte';
@@ -10,29 +11,41 @@
 	import PrintIcon from '$lib/icons/PrintIcon.svelte';
 	import ShareIcon from '$lib/icons/ShareIcon.svelte';
 
-	import Speedometer from './Speedometer.svelte';
+	import History from './History.svelte';
 	import MapboxMap from './MapboxMap.svelte';
 	import VoltageChart from '$lib/components/charts/VoltageChart.svelte';
+	import TempChart from '$lib/components/charts/TempChart.svelte';
+	import AQIChart from '$lib/components/charts/AQIChart.svelte';
+	import HumidityChart from '$lib/components/charts/HumidityChart.svelte';
+	import Recommendation from './Recommendation.svelte';
+	import Speedometer from './Speedometer.svelte';
+	import { APP_UID } from '$lib/constants';
+	import PMChart from '$lib/components/charts/PMChart.svelte';
 	import TOOLTIP_STATES from '$lib/constants/TooltipStates';
 	import DATE_RANGE_OPTIONS from '$lib/constants/DateRangeOptions';
+	import { shareDashboard } from '$lib/util/share';
+	import { convertDateRange, dateRangeDisplayText } from '$lib/util/dates';
 	import { getHeatIndex, toCelsius, toFahrenheit } from '$lib/services/air';
-	import { ERROR_TYPES } from '$lib/constants/ErrorTypes';
+	import { ERROR_TYPE } from '$lib/constants/ErrorTypes';
 	import type { AirnoteReading } from '$lib/services/AirReadingModel';
+	import type { AirnoteHistoryReadings } from '$lib/services/AirHistoryModel';
 
 	export let deviceUID: string;
 
 	let lastReading: AirnoteReading;
 	let readings: AirnoteReading[];
-	let history;
+	let history: AirnoteHistoryReadings;
 
 	let error = false;
 	let errorType;
 	let loading = true;
 
-	let tempDisplay = localStorage.getItem('tempDisplay') || 'C';
-	let showBanner = localStorage.getItem('showBanner') === 'false' ? false : true;
+	let tempDisplay: string = 'C';
+	let showBanner: boolean = true;
 	let tooltipState = TOOLTIP_STATES.CLOSED;
 	let selectedDateRange = DATE_RANGE_OPTIONS.SEVEN_DAYS.displayText;
+
+	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
 
 	const toggleTempDisplay = () => {
 		tempDisplay = tempDisplay == 'C' ? 'F' : 'C';
@@ -57,6 +70,52 @@
 		showBanner = false;
 		localStorage.setItem('showBanner', 'false');
 	};
+
+	export let data;
+	console.log(data);
+
+	// $: if (selectedDateRange) {
+	// 	const convertedTimeframe = convertDateRange(selectedDateRange);
+	// 	getReadings(deviceUID, convertedTimeframe)
+	// 		.then((data) => {
+	// 			// only update the data for the charts, not the AQI average history component
+	// 			readings = data.readings;
+	// 		})
+	// 		.catch((err) => {
+	// 			console.error(err);
+	// 			error = true;
+	// 			errorType = ERROR_TYPE.NOTEHUB_ERROR;
+	// 		});
+	// }
+
+	onMount(() => {
+		tempDisplay = localStorage.getItem('tempDisplay') || 'C';
+		showBanner = localStorage.getItem('showBanner') === 'false' ? false : true;
+	});
+
+	// onMount(() => {
+	// 	getReadings(deviceUID)
+	// 		.then((data) => {
+	// 			lastReading = data.readings[0];
+	// 			if (!lastReading) {
+	// 				error = true;
+	// 				errorType = ERROR_TYPE.NO_DATA_ERROR;
+	// 			} else {
+	// 				lastReading.heatIndex = getHeatIndex({
+	// 					temperature: toFahrenheit(lastReading.temperature),
+	// 					humidity: lastReading.humidity
+	// 				});
+	// 				history = data.history;
+	// 			}
+	// 			loading = false;
+	// 		})
+	// 		.catch((err) => {
+	// 			console.error(err);
+	// 			error = true;
+	// 			errorType = ERROR_TYPE.NOTEHUB_ERROR;
+	// 			loading = false;
+	// 		});
+	// });
 </script>
 
 <svelte:head>
@@ -73,9 +132,9 @@
 		<div class="loading" />
 	{/if}
 
-	{#if error}
+	<!-- {#if error}
 		{@html renderErrorMessage(errorType, deviceUID)}
-	{/if}
+	{/if} -->
 
 	{#if lastReading}
 		<div class="air-quality-wrapper" in:fade>
