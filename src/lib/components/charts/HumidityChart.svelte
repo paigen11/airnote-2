@@ -18,10 +18,10 @@
 
 	function getHumidityData(readings: AirnoteReading[]) {
 		humidityData = readings.map((reading) => {
-			const d = parseISO(reading.captured);
+			const d = parseISO(reading.when);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(reading.humidity.toString()).toFixed(2)
+				y: parseFloat(reading.body.humidity.toString()).toFixed(2)
 			};
 		});
 	}

@@ -11,6 +11,7 @@
 	<main>
 		<div class="container">
 			<slot />
+			<hr />
 		</div>
 	</main>
 

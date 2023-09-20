@@ -18,10 +18,10 @@
 
 	function getAQIData(readings: AirnoteReading[]) {
 		aqiData = readings.map((reading) => {
-			const d = parseISO(reading.captured);
+			const d = parseISO(reading.when);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: reading.aqi
+				y: reading.body.aqi
 			};
 		});
 	}

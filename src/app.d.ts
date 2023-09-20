@@ -2,11 +2,14 @@
 // for information about these interfaces
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			errorType: string;
+			deviceUID: string;
+		}
 		// interface Locals {}
 		// interface PageData {}
 		// interface Platform {}
 	}
 }
 
-export {};
+export { Error };

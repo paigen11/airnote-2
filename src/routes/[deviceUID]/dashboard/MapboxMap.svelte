@@ -50,7 +50,7 @@
 		});
 
 		// todo (paige) check on this date
-		const d = parseISO(lastReading.captured);
+		const d = parseISO(lastReading.when);
 
 		popup = new mapboxgl.Popup().setHTML(
 			`<p style="text-align: center; margin:0">${format(d, DATE_TIME_KEY)}</p>

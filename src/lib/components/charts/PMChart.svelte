@@ -23,24 +23,24 @@
     then parseISO() turns it into Mon Aug 22 2022 02:27:38 GMT-0400 (Eastern Daylight Time),
     and we take that date object and format() for the particular component (MM-dd HH:mm) */
 		pm1Data = readings.map((reading) => {
-			const d = parseISO(reading.captured);
+			const d = parseISO(reading.when);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(reading.pm01_0.toString()).toFixed(2)
+				y: parseFloat(reading.body.pm01_0.toString()).toFixed(2)
 			};
 		});
 		pm2_5Data = readings.map((reading) => {
-			const d = parseISO(reading.captured);
+			const d = parseISO(reading.when);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(reading.pm02_5.toString()).toFixed(2)
+				y: parseFloat(reading.body.pm02_5.toString()).toFixed(2)
 			};
 		});
 		pm10Data = readings.map((reading) => {
-			const d = parseISO(reading.captured);
+			const d = parseISO(reading.when);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(reading.pm10_0.toString()).toFixed(2)
+				y: parseFloat(reading.body.pm10_0.toString()).toFixed(2)
 			};
 		});
 	}
