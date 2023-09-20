@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
 	import { NotificationDisplay } from '@beyonk/svelte-notifications';
 	import { format } from 'date-fns';
 	import { unparse } from 'papaparse';
@@ -29,6 +32,7 @@
 	import { ERROR_TYPE } from '$lib/constants/ErrorTypes';
 	import type { AirnoteReading } from '$lib/services/AirReadingModel';
 	import type { AirnoteHistoryReadings } from '$lib/services/AirHistoryModel';
+	import { renderErrorMessage } from '$lib/util/errors';
 
 	export let deviceUID: string;
 
@@ -37,13 +41,13 @@
 	let history: AirnoteHistoryReadings;
 
 	let error = false;
-	let errorType;
-	let loading = true;
+	let errorType: string;
 
 	let tempDisplay: string = 'C';
 	let showBanner: boolean = true;
 	let tooltipState = TOOLTIP_STATES.CLOSED;
 	let selectedDateRange = DATE_RANGE_OPTIONS.SEVEN_DAYS.displayText;
+	console.log('selectedDateRange', selectedDateRange);
 
 	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
 
@@ -72,21 +76,42 @@
 	};
 
 	export let data;
-	console.log(data);
+	// todo unpack this obj and fix the input selection
+	console.log('data-------', data);
 
-	// $: if (selectedDateRange) {
-	// 	const convertedTimeframe = convertDateRange(selectedDateRange);
-	// 	getReadings(deviceUID, convertedTimeframe)
-	// 		.then((data) => {
-	// 			// only update the data for the charts, not the AQI average history component
-	// 			readings = data.readings;
-	// 		})
-	// 		.catch((err) => {
-	// 			console.error(err);
-	// 			error = true;
-	// 			errorType = ERROR_TYPE.NOTEHUB_ERROR;
-	// 		});
-	// }
+	readings = data.data.readings;
+
+	if (!readings || readings.length === 0) {
+		error = true;
+		errorType = ERROR_TYPE.NO_DATA_ERROR;
+	}
+	lastReading = readings[0];
+	console.log('last reading ', lastReading);
+	lastReading.heatIndex = getHeatIndex({
+		temperature: toFahrenheit(lastReading.temperature),
+		humidity: lastReading.humidity
+	});
+	history = data.data.history;
+
+	$: if (browser && selectedDateRange) {
+		const convertedTimeframe = convertDateRange(selectedDateRange);
+		// console.log('selected date range changed! ', convertedTimeframe);
+		$page.url.searchParams.set('timeframe', convertedTimeframe);
+
+		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true, noScroll: true });
+		// 	actions.refetchEvents(deviceUID, convertedTimeframe);
+
+		// getReadings(deviceUID, convertedTimeframe)
+		// 	.then((data) => {
+		// 		// only update the data for the charts, not the AQI average history component
+		// 		readings = data.readings;
+		// 	})
+		// 	.catch((err) => {
+		// 		console.error(err);
+		// 		error = true;
+		// 		errorType = ERROR_TYPE.NOTEHUB_ERROR;
+		// 	});
+	}
 
 	onMount(() => {
 		tempDisplay = localStorage.getItem('tempDisplay') || 'C';
@@ -128,13 +153,9 @@
 <NotificationDisplay />
 
 <div class="dashboard" style="opacity: {tooltipState !== TOOLTIP_STATES.CLOSED ? 0.3 : 1}">
-	{#if loading}
-		<div class="loading" />
-	{/if}
-
-	<!-- {#if error}
+	{#if error}
 		{@html renderErrorMessage(errorType, deviceUID)}
-	{/if} -->
+	{/if}
 
 	{#if lastReading}
 		<div class="air-quality-wrapper" in:fade>
@@ -323,7 +344,6 @@
 				<PMChart {readings} />
 			</div>
 		</div>
-
 		{#if showBanner}
 			<div class="banner" in:fade>
 				<p>
@@ -400,6 +420,19 @@
 		min-height: 200px;
 		position: relative;
 	}
+
+	.box {
+		border: 1px solid var(--lightestGray);
+		background: var(--white);
+		border-radius: 5px;
+		padding: 1.5rem;
+		margin: 1rem 0;
+	}
+
+	.box h3 {
+		margin-top: 0;
+	}
+
 	.banner {
 		background: var(--bannerBlue);
 		padding: 0.75rem 0.75rem;

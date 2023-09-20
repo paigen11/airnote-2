@@ -23,17 +23,17 @@
 
 	function getTempData(readings: AirnoteReading[]) {
 		tempDataCelsius = readings.map((reading) => {
-			const d = parseISO(reading.when);
+			const d = parseISO(reading.captured);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(reading.body.temperature.toString()).toFixed(2)
+				y: parseFloat(reading.temperature.toString()).toFixed(2)
 			};
 		});
 		tempDataFahrenheit = readings.map((reading) => {
-			const d = parseISO(reading.when);
+			const d = parseISO(reading.captured);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(toFahrenheit(reading.body.temperature).toString()).toFixed(2)
+				y: parseFloat(toFahrenheit(reading.temperature).toString()).toFixed(2)
 			};
 		});
 	}

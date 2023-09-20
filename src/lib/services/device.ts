@@ -1,7 +1,79 @@
-import { AIRNOTE_PRODUCT_UID } from '$lib/constants';
+import { DATE_FORMAT_KEY, AIRNOTE_PRODUCT_UID } from '$lib/constants';
+import { format } from 'date-fns';
 import queryString from 'query-string';
+import type { AirnoteReading } from './AirReadingModel';
+import type { NotehubEvent } from './NotehubEventModel';
+import type { AirnoteDevice } from './DeviceModel';
 
-function saveLastViewedDevice(data) {
+function getHistory(readings: AirnoteReading[]) {
+	// Group the readings into the calendar day they occurred on
+	const groupedReadings: Record<string, AirnoteReading[]> = {};
+
+	readings.forEach((reading) => {
+		const formattedDate = format(new Date(reading.captured), DATE_FORMAT_KEY);
+		if (groupedReadings[formattedDate]) {
+			groupedReadings[formattedDate].push(reading);
+		} else {
+			groupedReadings[formattedDate] = [reading];
+		}
+	});
+
+	// Now get the average aqi reading on each of those days
+	const aqiHistory: { [key: string]: number } = {};
+	const pm01_0History: { [key: string]: number } = {};
+	const pm02_5History: { [key: string]: number } = {};
+	const pm10_0History: { [key: string]: number } = {};
+	Object.keys(groupedReadings).forEach((date) => {
+		let aqiTotal = 0;
+		let pm01_0Total = 0;
+		let pm02_5Total = 0;
+		let pm10_0Total = 0;
+		const totalReadings = groupedReadings[date].length;
+		groupedReadings[date].forEach((reading) => {
+			aqiTotal += reading.aqi;
+			pm01_0Total += reading.pm01_0;
+			pm02_5Total += reading.pm02_5;
+			pm10_0Total += reading.pm10_0;
+		});
+		aqiHistory[date] = Math.round(aqiTotal / totalReadings);
+		pm01_0History[date] = Math.round(pm01_0Total / totalReadings);
+		pm02_5History[date] = Math.round(pm02_5Total / totalReadings);
+		pm10_0History[date] = Math.round(pm10_0Total / totalReadings);
+	});
+
+	return {
+		aqi: aqiHistory,
+		pm1_0: pm01_0History,
+		pm2_5: pm02_5History,
+		pm10_0: pm10_0History
+	};
+}
+
+export function getReadings(events: NotehubEvent[], deviceUID: string) {
+	const readings: AirnoteReading[] = [];
+	events.forEach((event) => {
+		const data: AirnoteReading = event.body;
+		console.log('data ', data);
+		data.device_uid = deviceUID;
+		data.captured = event.when;
+		data.location = event.location;
+		data.lat = event.lat;
+		data.lon = event.lon;
+		data.serial_number = event.serial_number;
+		data.aqi = event.body.aqi ? event.body.aqi : 0;
+		data.pm01_0 = event.body.pm01_0 ? event.body.pm01_0 : 0;
+		data.pm02_5 = event.body.pm02_5 ? event.body.pm02_5 : 0;
+		data.pm10_0 = event.body.pm10_0 ? event.body.pm10_0 : 0;
+		readings.push(data);
+	});
+
+	return {
+		readings,
+		history: getHistory(readings)
+	};
+}
+
+function saveLastViewedDevice(data: string) {
 	localStorage.setItem('device', JSON.stringify(data));
 }
 
@@ -9,9 +81,9 @@ function readLastViewedDevice() {
 	return JSON.parse(localStorage.getItem('device')) || {};
 }
 
-export function getCurrentDeviceFromUrl(location) {
+export function getCurrentDeviceFromUrl(location: string) {
 	const lastViewedDevice = readLastViewedDevice();
-	const currentDevice = {};
+	const currentDevice: AirnoteDevice = {};
 
 	const query = queryString.parse(location.search);
 	let pin = query['pin'] || '';

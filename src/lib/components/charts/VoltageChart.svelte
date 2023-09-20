@@ -23,20 +23,20 @@
 
 	function getVoltageData(readings: AirnoteReading[]) {
 		voltageData = readings.reverse().map((reading) => {
-			const d = parseISO(reading.when);
+			const d = parseISO(reading.captured);
 			return {
 				x: format(d, DATE_TIME_FORMAT_KEY),
-				y: parseFloat(reading.body.voltage.toString()).toFixed(2)
+				y: parseFloat(reading.voltage.toString()).toFixed(2)
 			};
 		});
 		chargingData = readings
-			.filter((reading) => reading.body.charging)
+			.filter((reading) => reading.charging)
 			.map((reading) => {
-				const d = parseISO(reading.when);
+				const d = parseISO(reading.captured);
 				return {
 					x: format(d, DATE_TIME_FORMAT_KEY),
 					y: MAX_VOLTAGE,
-					voltage: parseFloat(reading.body.voltage.toString()).toFixed(2)
+					voltage: parseFloat(reading.voltage.toString()).toFixed(2)
 				};
 			});
 	}
