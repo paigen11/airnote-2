@@ -5,7 +5,7 @@ import type { AirnoteReading } from './AirReadingModel';
 import type { NotehubEvent } from './NotehubEventModel';
 import type { AirnoteDevice } from './DeviceModel';
 
-function getHistory(readings: AirnoteReading[]) {
+export function getHistoryReadings(readings: AirnoteReading[]) {
 	// Group the readings into the calendar day they occurred on
 	const groupedReadings: Record<string, AirnoteReading[]> = {};
 
@@ -49,11 +49,10 @@ function getHistory(readings: AirnoteReading[]) {
 	};
 }
 
-export function getReadings(events: NotehubEvent[], deviceUID: string) {
+export function getCurrentReadings(events: NotehubEvent[], deviceUID: string) {
 	const readings: AirnoteReading[] = [];
 	events.forEach((event) => {
 		const data: AirnoteReading = event.body;
-		console.log('data ', data);
 		data.device_uid = deviceUID;
 		data.captured = event.when;
 		data.location = event.location;
@@ -67,10 +66,7 @@ export function getReadings(events: NotehubEvent[], deviceUID: string) {
 		readings.push(data);
 	});
 
-	return {
-		readings,
-		history: getHistory(readings)
-	};
+	return readings;
 }
 
 function saveLastViewedDevice(data: string) {

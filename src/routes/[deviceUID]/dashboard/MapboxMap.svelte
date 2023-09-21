@@ -3,7 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import { format, parseISO } from 'date-fns';
 	import { aqiColors, aqiRanges, getAQIColor } from '$lib/services/air';
-	import { DATE_TIME_FORMAT_KEY, DATE_TIME_KEY } from '$lib/constants';
+	import { DATE_TIME_KEY } from '$lib/constants';
 	import mapboxgl from 'mapbox-gl';
 	import type { AirnoteReading } from '$lib/services/AirReadingModel';
 
@@ -49,8 +49,7 @@
 			}
 		});
 
-		// todo (paige) check on this date
-		const d = parseISO(lastReading.when);
+		const d = parseISO(lastReading.captured);
 
 		popup = new mapboxgl.Popup().setHTML(
 			`<p style="text-align: center; margin:0">${format(d, DATE_TIME_KEY)}</p>

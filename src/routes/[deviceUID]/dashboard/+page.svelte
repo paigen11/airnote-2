@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
-	import { page } from '$app/stores';
 	import { NotificationDisplay } from '@beyonk/svelte-notifications';
 	import { format } from 'date-fns';
 	import { unparse } from 'papaparse';
@@ -27,7 +24,7 @@
 	import TOOLTIP_STATES from '$lib/constants/TooltipStates';
 	import DATE_RANGE_OPTIONS from '$lib/constants/DateRangeOptions';
 	import { shareDashboard } from '$lib/util/share';
-	import { convertDateRange, dateRangeDisplayText } from '$lib/util/dates';
+	import { convertDateRange, dateRangeDisplayText, filterEventsByDate } from '$lib/util/dates';
 	import { getHeatIndex, toCelsius, toFahrenheit } from '$lib/services/air';
 	import { ERROR_TYPE } from '$lib/constants/ErrorTypes';
 	import type { AirnoteReading } from '$lib/services/AirReadingModel';
@@ -37,8 +34,14 @@
 	export let deviceUID: string;
 
 	let lastReading: AirnoteReading;
-	let readings: AirnoteReading[];
-	let history: AirnoteHistoryReadings;
+	let readings: AirnoteReading[] = [];
+	let history: AirnoteHistoryReadings = {
+		aqi: {},
+		pm1_0: {},
+		pm2_5: {},
+		pm10_0: {}
+	};
+	let displayedReadings: AirnoteReading[];
 
 	let error = false;
 	let errorType: string;
@@ -47,7 +50,6 @@
 	let showBanner: boolean = true;
 	let tooltipState = TOOLTIP_STATES.CLOSED;
 	let selectedDateRange = DATE_RANGE_OPTIONS.SEVEN_DAYS.displayText;
-	console.log('selectedDateRange', selectedDateRange);
 
 	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
 
@@ -56,7 +58,7 @@
 		localStorage.setItem('tempDisplay', tempDisplay);
 	};
 
-	function handleTempDisplayChange(ev) {
+	function handleTempDisplayChange(ev: { detail: string }) {
 		tempDisplay = ev.detail;
 	}
 
@@ -76,71 +78,36 @@
 	};
 
 	export let data;
-	// todo unpack this obj and fix the input selection
-	console.log('data-------', data);
 
-	readings = data.data.readings;
+	if (data && data.readings) {
+		readings = data.readings;
+	}
+
+	if (data && data.history) {
+		history = data.history;
+	}
 
 	if (!readings || readings.length === 0) {
 		error = true;
 		errorType = ERROR_TYPE.NO_DATA_ERROR;
+	} else {
+		lastReading = readings[0];
+
+		lastReading.heatIndex = getHeatIndex({
+			temperature: toFahrenheit(lastReading.temperature),
+			humidity: lastReading.humidity
+		});
 	}
-	lastReading = readings[0];
-	console.log('last reading ', lastReading);
-	lastReading.heatIndex = getHeatIndex({
-		temperature: toFahrenheit(lastReading.temperature),
-		humidity: lastReading.humidity
-	});
-	history = data.data.history;
 
-	$: if (browser && selectedDateRange) {
+	$: if (selectedDateRange) {
 		const convertedTimeframe = convertDateRange(selectedDateRange);
-		// console.log('selected date range changed! ', convertedTimeframe);
-		$page.url.searchParams.set('timeframe', convertedTimeframe);
-
-		goto(`?${$page.url.searchParams.toString()}`, { replaceState: true, noScroll: true });
-		// 	actions.refetchEvents(deviceUID, convertedTimeframe);
-
-		// getReadings(deviceUID, convertedTimeframe)
-		// 	.then((data) => {
-		// 		// only update the data for the charts, not the AQI average history component
-		// 		readings = data.readings;
-		// 	})
-		// 	.catch((err) => {
-		// 		console.error(err);
-		// 		error = true;
-		// 		errorType = ERROR_TYPE.NOTEHUB_ERROR;
-		// 	});
+		displayedReadings = filterEventsByDate(readings, convertedTimeframe);
 	}
 
 	onMount(() => {
 		tempDisplay = localStorage.getItem('tempDisplay') || 'C';
 		showBanner = localStorage.getItem('showBanner') === 'false' ? false : true;
 	});
-
-	// onMount(() => {
-	// 	getReadings(deviceUID)
-	// 		.then((data) => {
-	// 			lastReading = data.readings[0];
-	// 			if (!lastReading) {
-	// 				error = true;
-	// 				errorType = ERROR_TYPE.NO_DATA_ERROR;
-	// 			} else {
-	// 				lastReading.heatIndex = getHeatIndex({
-	// 					temperature: toFahrenheit(lastReading.temperature),
-	// 					humidity: lastReading.humidity
-	// 				});
-	// 				history = data.history;
-	// 			}
-	// 			loading = false;
-	// 		})
-	// 		.catch((err) => {
-	// 			console.error(err);
-	// 			error = true;
-	// 			errorType = ERROR_TYPE.NOTEHUB_ERROR;
-	// 			loading = false;
-	// 		});
-	// });
 </script>
 
 <svelte:head>
@@ -272,8 +239,8 @@
 						<strong>Heat Index</strong>
 						<div class="measurement-value">
 							{tempDisplay == 'F'
-								? Math.round(lastReading.heatIndex) + '°F'
-								: Math.round(toCelsius(lastReading.heatIndex)) + '°C'}
+								? lastReading.heatIndex && Math.round(lastReading.heatIndex) + '°F'
+								: lastReading.heatIndex && Math.round(toCelsius(lastReading.heatIndex)) + '°C'}
 						</div>
 					</div>
 					<div>
@@ -327,21 +294,23 @@
 
 		<div class="all-charts">
 			<div class="box chart1" in:fade>
-				<VoltageChart {readings} />
+				<VoltageChart readings={displayedReadings} />
 			</div>
 
 			<div class="box chart2" in:fade>
-				<TempChart {tempDisplay} {readings} on:change={handleTempDisplayChange} />
+				<TempChart {tempDisplay} readings={displayedReadings} on:change={handleTempDisplayChange} />
 			</div>
 
 			<div class="box chart3" in:fade>
-				<AQIChart {readings} />
+				<AQIChart readings={displayedReadings} />
 			</div>
 
-			<div class="box chart4" in:fade><HumidityChart {readings} /></div>
+			<div class="box chart4" in:fade>
+				<HumidityChart readings={displayedReadings} />
+			</div>
 
 			<div class="box chart5" in:fade>
-				<PMChart {readings} />
+				<PMChart readings={displayedReadings} />
 			</div>
 		</div>
 		{#if showBanner}

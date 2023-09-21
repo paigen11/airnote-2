@@ -6,7 +6,7 @@ export function renderErrorMessage(errorType: string, deviceUID: string) {
 		case errorType === ERROR_TYPE.NOTEHUB_ERROR:
 			return `
         <div class="alert">
-          <h4 class="alert-heading">Unable to fetch device details - error handled gracefully.</h4>
+          <h4 class="alert-heading">Unable to fetch device details.</h4>
           Please make sure your Airnote is
           <a href="https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}" target="_new"> online and connected to Notehub.io </a>
           before visiting this page. For help getting started, visit
