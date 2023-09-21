@@ -9,21 +9,17 @@
 	let menuOpen = false;
 	const toggleMenu = () => (menuOpen = !menuOpen);
 
-	export let url: string = '';
-	export let pin: string = '';
-	export let productUID: string = '';
-	export let deviceUID: string = '';
-	export let internalNav: boolean = false;
+	let pin: string | (string | null)[] = '';
+	let productUID: string | (string | null)[] = '';
+	let deviceUID: string = '';
 
-	onMount(async () => {
+	onMount(() => {
 		const location = window.location;
 		const currentDevice: AirnoteDevice = getCurrentDeviceFromUrl(location);
 
-		url = '';
 		pin = currentDevice.pin ? currentDevice.pin : '';
 		productUID = currentDevice.productUID ? currentDevice.productUID : '';
 		deviceUID = currentDevice.deviceUID ? currentDevice.deviceUID : '';
-		internalNav = currentDevice.internalNav ? currentDevice.internalNav : false;
 	});
 </script>
 

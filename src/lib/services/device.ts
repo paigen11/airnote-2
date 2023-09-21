@@ -69,20 +69,30 @@ export function getCurrentReadings(events: NotehubEvent[], deviceUID: string) {
 	return readings;
 }
 
-function saveLastViewedDevice(data: string) {
+function saveLastViewedDevice(data: AirnoteDevice) {
 	localStorage.setItem('device', JSON.stringify(data));
 }
 
 function readLastViewedDevice() {
-	return JSON.parse(localStorage.getItem('device')) || {};
+	const device: string | null = localStorage.getItem('device');
+
+	if (device !== null) {
+		return JSON.parse(device);
+	} else {
+		return {};
+	}
 }
 
-export function getCurrentDeviceFromUrl(location: string) {
+export function getCurrentDeviceFromUrl(location: Location) {
 	const lastViewedDevice = readLastViewedDevice();
-	const currentDevice: AirnoteDevice = {};
+	const currentDevice: AirnoteDevice = {
+		deviceUID: '',
+		productUID: '',
+		pin: ''
+	};
 
 	const query = queryString.parse(location.search);
-	let pin = query['pin'] || '';
+	let pin = query['pin'];
 	let productUID = query['product'] || AIRNOTE_PRODUCT_UID;
 	let deviceUID = location.pathname.match(/dev:\d*/)?.[0] || '';
 	const internalNav = query['internalNav'];

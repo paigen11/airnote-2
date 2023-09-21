@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { NotificationDisplay } from '@beyonk/svelte-notifications';
-	import { format } from 'date-fns';
-	import { unparse } from 'papaparse';
-	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
+	import { unparse } from 'papaparse';
+	import { format } from 'date-fns';
+	import { NotificationDisplay } from '@beyonk/svelte-notifications';
 
 	import CloseIcon from '$lib/icons/CloseIcon.svelte';
 	import DownloadIcon from '$lib/icons/DownloadIcon.svelte';
@@ -58,8 +58,8 @@
 		localStorage.setItem('tempDisplay', tempDisplay);
 	};
 
-	function handleTempDisplayChange(ev: { detail: string }) {
-		tempDisplay = ev.detail;
+	function handleTempDisplayChange(event: { detail: string }) {
+		tempDisplay = event.detail;
 	}
 
 	const downloadData = () => {
