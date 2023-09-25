@@ -53,30 +53,7 @@
 
 	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
 
-	const toggleTempDisplay = () => {
-		tempDisplay = tempDisplay == 'C' ? 'F' : 'C';
-		localStorage.setItem('tempDisplay', tempDisplay);
-	};
-
-	function handleTempDisplayChange(event: { detail: string }) {
-		tempDisplay = event.detail;
-	}
-
-	const downloadData = () => {
-		const csv = 'data:text/csv;charset=utf-8,' + unparse(readings);
-		const encodedURI = encodeURI(csv);
-
-		var link = document.createElement('a');
-		link.setAttribute('href', encodedURI);
-		link.setAttribute('download', 'airnote.csv');
-		link.click();
-	};
-
-	const closeBanner = () => {
-		showBanner = false;
-		localStorage.setItem('showBanner', 'false');
-	};
-
+	// data fetched from Notehub API via +page.server.ts on page load
 	export let data;
 
 	if (data && data.readings) {
@@ -103,6 +80,30 @@
 		const convertedTimeframe = convertDateRange(selectedDateRange);
 		displayedReadings = filterEventsByDate(readings, convertedTimeframe);
 	}
+
+	const toggleTempDisplay = () => {
+		tempDisplay = tempDisplay == 'C' ? 'F' : 'C';
+		localStorage.setItem('tempDisplay', tempDisplay);
+	};
+
+	function handleTempDisplayChange(event: { detail: string }) {
+		tempDisplay = event.detail;
+	}
+
+	const downloadData = () => {
+		const csv = 'data:text/csv;charset=utf-8,' + unparse(readings);
+		const encodedURI = encodeURI(csv);
+
+		var link = document.createElement('a');
+		link.setAttribute('href', encodedURI);
+		link.setAttribute('download', 'airnote.csv');
+		link.click();
+	};
+
+	const closeBanner = () => {
+		showBanner = false;
+		localStorage.setItem('showBanner', 'false');
+	};
 
 	onMount(() => {
 		tempDisplay = localStorage.getItem('tempDisplay') || 'C';

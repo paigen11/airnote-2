@@ -6,8 +6,19 @@
 	import { getCurrentDeviceFromUrl } from '$lib/services/device';
 	import DeviceSettings from './DeviceSettings.svelte';
 	import DeviceOwner from './DeviceOwner.svelte';
-	import { displayValue } from '$lib/stores/settingsStore';
+	import {
+		deviceName,
+		displayValue,
+		indoorDevice,
+		sampleFrequencyUSB,
+		sampleFrequencyFull,
+		sampleFrequencyLow,
+		contactName,
+		contactEmail,
+		contactAffiliation
+	} from '$lib/stores/settingsStore';
 	import type { AirnoteDevice } from '$lib/services/DeviceModel';
+	import { ERROR_TYPE } from '$lib/constants/ErrorTypes';
 	import { renderErrorMessage } from '$lib/util/errors';
 
 	export let pin: string | (string | null)[] = '';
@@ -20,6 +31,53 @@
 	let notify;
 
 	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
+
+	export let data;
+	if (data.errorType) {
+		if (data.errorType === 'No PIN') {
+			error = true;
+			errorType = ERROR_TYPE.MISSING_PIN;
+		}
+	}
+
+	if (data.canModify) {
+		enableFields = true;
+	} else if (!data.canModify) {
+		error = true;
+		errorType = ERROR_TYPE.INVALID_PIN;
+	}
+
+	console.log(data);
+
+	const updateSettingsFromEnvVars = (data) => {
+		if (data['_sn']) $deviceName = data['_sn'];
+		if (data['_air_mins']) {
+			// Split semi-colon list into an array for parsing and reassembly
+			// "usb:15;high:123;normal:123;low:720;0"
+			let airMinsVals = data['_air_mins'].split(';').map((item) => item.split(':'));
+			for (let index = 0; index < airMinsVals.length; index++) {
+				const element = airMinsVals[index];
+				switch (element[0]) {
+					case 'usb':
+						$sampleFrequencyUSB = element[1];
+						break;
+					case 'high':
+						$sampleFrequencyFull = element[1];
+						break;
+					case 'low':
+						$sampleFrequencyLow = element[1];
+						break;
+				}
+			}
+		}
+		if (data['_air_indoors']) $indoorDevice = data['_air_indoors'] === '0' ? false : true;
+		if (data['_air_status']) $displayValue = data['_air_status'];
+		if (data['_contact_name']) $contactName = data['_contact_name'];
+		if (data['_contact_email']) $contactEmail = data['_contact_email'];
+		if (data['_contact_affiliation']) $contactAffiliation = data['_contact_affiliation'];
+	};
+
+	updateSettingsFromEnvVars(data.environment_variables);
 
 	// rename and move this into air.ts file
 	const displayOptions = [
@@ -79,39 +137,6 @@
 		// };
 	};
 
-	// please move this
-	const updateSettingsFromEnvVars = (data) => {
-		// if (data["_sn"]) $deviceName = data["_sn"];
-		// if (data["_air_mins"]) {
-		//   // Split semi-colon list into an array for parsing and reassembly
-		//   // "usb:15;high:123;normal:123;low:720;0"
-		//   let airMinsVals = data["_air_mins"]
-		//     .split(";")
-		//     .map((item) => item.split(":"));
-		//   for (let index = 0; index < airMinsVals.length; index++) {
-		//     const element = airMinsVals[index];
-		//     switch (element[0]) {
-		//       case "usb":
-		//         $sampleFrequencyUSB = element[1];
-		//         break;
-		//       case "high":
-		//         $sampleFrequencyFull = element[1];
-		//         break;
-		//       case "low":
-		//         $sampleFrequencyLow = element[1];
-		//         break;
-		//     }
-		//   }
-		// }
-		// if (data["_air_indoors"])
-		//   $indoorDevice = data["_air_indoors"] === "0" ? false : true;
-		// if (data["_air_status"]) $displayValue = data["_air_status"];
-		// if (data["_contact_name"]) $contactName = data["_contact_name"];
-		// if (data["_contact_email"]) $contactEmail = data["_contact_email"];
-		// if (data["_contact_affiliation"])
-		//   $contactAffiliation = data["_contact_affiliation"];
-	};
-
 	onMount(() => {
 		const currentDevice: AirnoteDevice = getCurrentDeviceFromUrl(location);
 		pin = currentDevice.pin ? currentDevice.pin : '';
@@ -125,51 +150,12 @@
 		if (deviceUID && location.pathname === '/' + deviceUID && !pin && internalNav === 'false') {
 			goto(`/${deviceUID}/dashboard`, { replaceState: true });
 		}
-
-		// fetch the device env variables to display in inputs
-		//  getDeviceEnvVars(deviceUID)
-		//   .then((data) => {
-		//     updateSettingsFromEnvVars(data);
-		//   })
-		//   .catch((err) => {
-		//     console.error(err);
-		//     error = true;
-		//     errorType = ERROR_TYPE.NOTEHUB_ERROR;
-		//   });
-
-		// // check for pin and display message if it does not exist
-		// if (pin === "") {
-		//   error = true;
-		//   errorType = ERROR_TYPE.MISSING_PIN;
-		// } else {
-		//   // if pin exists, check its validity to change device settings
-		//   checkDeviceEnvVarModificationAccess(productUID, deviceUID, pin)
-		//     .then((data) => {
-		//       // if pin is valid, enable inputs
-		//       if (data.canModify) {
-		//         error = false;
-		//         enableFields = true;
-		//       } else {
-		//         // if pin is invalid, display message it is invalid
-		//         error = true;
-		//         errorType = ERROR_TYPE.INVALID_PIN;
-		//         enableFields = false;
-		//       }
-		//     })
-		//     .catch((err) => {
-		//       console.error(err);
-		//       error = true;
-		//       errorType = ERROR_TYPE.NOTEHUB_ERROR;
-		//     });
-		// }
 	});
 </script>
 
 <svelte:head>
 	<title>Airnote Device Configuration</title>
 </svelte:head>
-
-<h1>Welcome to Airnote Settings page!</h1>
 
 {#if error}
 	{@html renderErrorMessage(errorType, deviceUID)}

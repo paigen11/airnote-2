@@ -4,16 +4,6 @@
 
 	export let enableFields;
 
-	sampleFrequencyFull.subscribe((value) => {
-		const allRanges = document.querySelectorAll('.frequency-wrap');
-		if (allRanges.length > 0) {
-			const frequency = allRanges[0].querySelector('#sampleFrequency');
-			const popup = allRanges[0].querySelector('.frequencyPopup');
-
-			setPopup(frequency, popup, value);
-		}
-	});
-
 	const setPopup = (frequency, popup, value) => {
 		const val = value ? value : frequency.value;
 		const min = frequency.min ? frequency.min : 0;
@@ -34,6 +24,16 @@
 				setPopup(frequency, popup);
 			});
 			setPopup(frequency, popup);
+		});
+
+		sampleFrequencyFull.subscribe((value) => {
+			const allRanges = document.querySelectorAll('.frequency-wrap');
+			if (allRanges.length > 0) {
+				const frequency = allRanges[0].querySelector('#sampleFrequency');
+				const popup = allRanges[0].querySelector('.frequencyPopup');
+
+				setPopup(frequency, popup, value);
+			}
 		});
 	});
 </script>

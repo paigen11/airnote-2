@@ -1,5 +1,6 @@
 import { notifier } from '@beyonk/svelte-notifications';
 
+// todo (paige) turn this into sveltekit action?
 export function shareDashboard(deviceUID: string) {
 	const url = `https://airnote.live/${deviceUID}/dashboard`;
 	const timeout = 3000;

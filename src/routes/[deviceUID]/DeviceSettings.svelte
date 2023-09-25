@@ -5,7 +5,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let enableFields;
+	export let enableFields: boolean;
 	export let displayOptions;
 
 	const save = (event) => {
