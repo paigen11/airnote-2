@@ -3,7 +3,6 @@
 	import { sampleFrequencyFull } from '$lib/stores/settingsStore';
 
 	export let enableFields: boolean;
-	console.log(enableFields);
 
 	const setPopup = (
 		frequency: HTMLInputElement,
@@ -50,7 +49,7 @@
 <div class="frequency-wrap">
 	<input
 		type="range"
-		name="frequency"
+		name="sampleFrequencyFull"
 		id="sampleFrequency"
 		disabled={!enableFields}
 		min="15"
