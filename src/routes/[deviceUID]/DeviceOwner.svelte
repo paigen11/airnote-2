@@ -4,9 +4,9 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let enableFields;
+	export let enableFields: boolean;
 
-	const save = (event) => {
+	const save = (event: { preventDefault: () => void }) => {
 		event.preventDefault();
 		dispatch('submit');
 	};
@@ -18,7 +18,7 @@
 	<div>
 		<label for="ownerName">Name</label>
 		<input
-			disabled={enableFields ? null : 'disabled'}
+			disabled={!enableFields}
 			type="text"
 			name="ownerName"
 			bind:value={$contactName}
@@ -30,7 +30,7 @@
 	<div>
 		<label for="companyName">Affiliation</label>
 		<input
-			disabled={enableFields ? null : 'disabled'}
+			disabled={!enableFields}
 			type="text"
 			name="companyName"
 			bind:value={$contactAffiliation}
@@ -42,7 +42,7 @@
 	<div>
 		<label for="ownerEmail">Contact Email</label>
 		<input
-			disabled={enableFields ? null : 'disabled'}
+			disabled={!enableFields}
 			type="email"
 			name="ownerEmail"
 			bind:value={$contactEmail}
@@ -59,6 +59,9 @@
 </form>
 
 <style>
+	h4 {
+		text-align: center;
+	}
 	.form-buttons {
 		text-align: center;
 	}

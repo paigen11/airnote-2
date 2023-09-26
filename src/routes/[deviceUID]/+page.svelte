@@ -17,6 +17,7 @@
 		contactEmail,
 		contactAffiliation
 	} from '$lib/stores/settingsStore';
+	import { deviceDisplayOptions } from '$lib/services/device';
 	import type { AirnoteDevice } from '$lib/services/DeviceModel';
 	import { ERROR_TYPE } from '$lib/constants/ErrorTypes';
 	import { renderErrorMessage } from '$lib/util/errors';
@@ -25,6 +26,7 @@
 	export let deviceUID: string = '';
 	export let internalNav: string | (string | null)[] = 'false';
 	export let productUID: string | (string | null)[] = '';
+
 	let enableFields = false;
 	let error = false;
 	let errorType: string;
@@ -33,21 +35,20 @@
 	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
 
 	export let data;
-	if (data.errorType) {
-		if (data.errorType === 'No PIN') {
+	const { environment_variables, unauthorizedError } = data;
+
+	if (unauthorizedError !== undefined) {
+		if (unauthorizedError.errorType === 'No PIN') {
 			error = true;
 			errorType = ERROR_TYPE.MISSING_PIN;
 		}
-	}
-
-	if (data.canModify) {
+		if (unauthorizedError.errorType === 'PIN is incorrect') {
+			error = true;
+			errorType = ERROR_TYPE.INVALID_PIN;
+		}
+	} else {
 		enableFields = true;
-	} else if (!data.canModify) {
-		error = true;
-		errorType = ERROR_TYPE.INVALID_PIN;
 	}
-
-	console.log(data);
 
 	const updateSettingsFromEnvVars = (data) => {
 		if (data['_sn']) $deviceName = data['_sn'];
@@ -77,31 +78,25 @@
 		if (data['_contact_affiliation']) $contactAffiliation = data['_contact_affiliation'];
 	};
 
-	updateSettingsFromEnvVars(data.environment_variables);
-
-	// rename and move this into air.ts file
-	const displayOptions = [
-		{ value: 'tempc', text: 'Temp (°C)' },
-		{ value: 'tempf', text: 'Temp (°F)' },
-		{ value: 'humid', text: 'Humidity' },
-		{ value: 'press', text: 'Barometric Pressue' }
-	];
+	if (environment_variables) {
+		updateSettingsFromEnvVars(environment_variables);
+	}
 
 	if (productUID === RADNOTE_PRODUCT_UID) {
 		$displayValue = 'usv';
 
-		displayOptions.splice(0, 0, {
+		deviceDisplayOptions.splice(0, 0, {
 			value: 'usv',
 			text: 'Microsieverts per Hour (default)'
 		});
-		displayOptions.push({ value: 'mrem', text: 'Milirem per Hour' });
-		displayOptions.push({ value: 'cpm', text: 'LND712 Counts Per Minute' });
+		deviceDisplayOptions.push({ value: 'mrem', text: 'Milirem per Hour' });
+		deviceDisplayOptions.push({ value: 'cpm', text: 'LND712 Counts Per Minute' });
 	} else {
 		$displayValue = 'pm2.5';
 
-		displayOptions.splice(0, 0, { value: 'pm2.5', text: 'PM2.5 (default)' });
-		displayOptions.push({ value: 'pm1.0', text: 'PM1.0' });
-		displayOptions.push({ value: 'pm10.0', text: 'PM10.0' });
+		deviceDisplayOptions.splice(0, 0, { value: 'pm2.5', text: 'PM2.5 (default)' });
+		deviceDisplayOptions.push({ value: 'pm1.0', text: 'PM1.0' });
+		deviceDisplayOptions.push({ value: 'pm10.0', text: 'PM10.0' });
 	}
 
 	const handleSettingsSave = () => {
@@ -181,7 +176,7 @@
 <NotificationDisplay bind:this={notify} />
 
 <section>
-	<DeviceSettings {enableFields} {displayOptions} on:submit={handleSettingsSave} />
+	<DeviceSettings {enableFields} {deviceDisplayOptions} on:submit={handleSettingsSave} />
 </section>
 
 <hr />
@@ -222,6 +217,7 @@
 	}
 	section {
 		margin: 0 auto;
+		text-align: left;
 	}
 	@media (max-width: 992px) {
 		section {

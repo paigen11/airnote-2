@@ -1,9 +1,10 @@
 import { DATE_FORMAT_KEY, AIRNOTE_PRODUCT_UID } from '$lib/constants';
 import { format } from 'date-fns';
 import queryString from 'query-string';
-import type { AirnoteReading } from './AirReadingModel';
-import type { NotehubEvent } from './NotehubEventModel';
-import type { AirnoteDevice } from './DeviceModel';
+import type { AirnoteReading } from '$lib/services/AirReadingModel';
+import type { NotehubEvent } from '$lib/services/NotehubEventModel';
+import type { AirnoteDevice } from '$lib/services/DeviceModel';
+import type { DeviceDisplayOption } from '$lib/services/DeviceDisplayModel';
 
 export function getHistoryReadings(readings: AirnoteReading[]) {
 	// Group the readings into the calendar day they occurred on
@@ -123,3 +124,10 @@ export function getCurrentDeviceFromUrl(location: Location) {
 
 	return currentDevice;
 }
+
+export const deviceDisplayOptions: DeviceDisplayOption[] = [
+	{ value: 'tempc', text: 'Temp (°C)' },
+	{ value: 'tempf', text: 'Temp (°F)' },
+	{ value: 'humid', text: 'Humidity' },
+	{ value: 'press', text: 'Barometric Pressue' }
+];

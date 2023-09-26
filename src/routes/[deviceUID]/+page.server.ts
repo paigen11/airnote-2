@@ -10,7 +10,7 @@ export async function load({ params, url }) {
 
 	let erred = false;
 	let notehubError: { status: number } | undefined;
-	let canModify = false;
+	let unauthorizedError: { errorType: string } | undefined;
 
 	const envVarResponse = await getDeviceEnvironmentVariables(deviceUID).catch((err) => {
 		console.error(err);
@@ -20,19 +20,13 @@ export async function load({ params, url }) {
 	const { environment_variables } = envVarResponse;
 
 	if (pin === '') {
-		const error = { message: 'No PIN provided', errorType: 'No PIN', deviceUID };
-		return error;
+		unauthorizedError = { errorType: 'No PIN' };
 	} else if (pin !== null) {
-		const canModifyEnvVars = await getDeviceEnvironmentVariablesByPin(deviceUID, pin).catch(
-			(err) => {
-				console.error(err);
-				const error = { message: 'Unauthorized', errorType: 'PIN is incorrect', deviceUID };
-				return error;
-			}
-		);
-		if (canModifyEnvVars.status === 200) {
-			canModify = true;
-		}
+		await getDeviceEnvironmentVariablesByPin(deviceUID, pin).catch((err) => {
+			console.error(err);
+			unauthorizedError = { errorType: 'PIN is incorrect' };
+			return unauthorizedError;
+		});
 	}
 
 	if (erred) {
@@ -52,6 +46,6 @@ export async function load({ params, url }) {
 			}
 		}
 	} else {
-		return { environment_variables, canModify };
+		return { environment_variables, unauthorizedError };
 	}
 }

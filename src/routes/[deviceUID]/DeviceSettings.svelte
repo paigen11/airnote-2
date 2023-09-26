@@ -2,13 +2,14 @@
 	import { createEventDispatcher } from 'svelte';
 	import Slider from './Slider.svelte';
 	import { deviceName, displayValue, indoorDevice } from '$lib/stores/settingsStore';
+	import type { DeviceDisplayOption } from '$lib/services/DeviceDisplayModel';
 
 	const dispatch = createEventDispatcher();
 
 	export let enableFields: boolean;
-	export let displayOptions;
+	export let deviceDisplayOptions: DeviceDisplayOption[] = [];
 
-	const save = (event) => {
+	const save = (event: { preventDefault: () => void }) => {
 		event.preventDefault();
 		dispatch('submit');
 	};
@@ -20,7 +21,7 @@
 	<div>
 		<label for="deviceName">Device name</label>
 		<input
-			disabled={enableFields ? null : 'disabled'}
+			disabled={!enableFields}
 			type="text"
 			name="name"
 			id="deviceName"
@@ -31,13 +32,8 @@
 
 	<div>
 		<label for="displayValue"> Airnote screen display value </label>
-		<select
-			disabled={enableFields ? null : 'disabled'}
-			bind:value={$displayValue}
-			name="display"
-			id="displayValue"
-		>
-			{#each displayOptions as option}
+		<select disabled={!enableFields} bind:value={$displayValue} name="display" id="displayValue">
+			{#each deviceDisplayOptions as option}
 				<option value={option['value']}>{option['text']}</option>
 			{/each}
 		</select>
@@ -51,7 +47,7 @@
 	<div>
 		<label class="checkbox-label">
 			<input
-				disabled={enableFields ? null : 'disabled'}
+				disabled={!enableFields}
 				bind:checked={$indoorDevice}
 				type="checkbox"
 				name="indoor"
@@ -69,6 +65,9 @@
 </form>
 
 <style>
+	h4 {
+		text-align: center;
+	}
 	label[for='sampleFrequency'] {
 		margin-bottom: 0.5rem;
 	}

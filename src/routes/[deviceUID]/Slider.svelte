@@ -2,14 +2,19 @@
 	import { onMount } from 'svelte';
 	import { sampleFrequencyFull } from '$lib/stores/settingsStore';
 
-	export let enableFields;
+	export let enableFields: boolean;
+	console.log(enableFields);
 
-	const setPopup = (frequency, popup, value) => {
-		const val = value ? value : frequency.value;
-		const min = frequency.min ? frequency.min : 0;
-		const max = frequency.max ? frequency.max : 100;
+	const setPopup = (
+		frequency: HTMLInputElement,
+		popup: HTMLOutputElement,
+		value: string | undefined
+	) => {
+		const val: number = value ? Number(value) : Number(frequency.value);
+		const min: number = frequency.min ? Number(frequency.min) : 0;
+		const max: number = frequency.max ? Number(frequency.max) : 100;
 		const newVal = Number(((val - min) * 100) / (max - min));
-		popup.innerHTML = val;
+		popup.innerHTML = val.toString();
 
 		popup.style.left = `calc(${newVal}% + (${8 - newVal * 0.15}px))`;
 	};
@@ -17,22 +22,26 @@
 	onMount(() => {
 		const allRanges = document.querySelectorAll('.frequency-wrap');
 		allRanges.forEach((wrap) => {
-			const frequency = wrap.querySelector('#sampleFrequency');
-			const popup = wrap.querySelector('.frequencyPopup');
+			const frequency: HTMLInputElement | null = wrap.querySelector('#sampleFrequency');
+			const popup: HTMLOutputElement | null = wrap.querySelector('.frequencyPopup');
 
-			frequency.addEventListener('input', () => {
-				setPopup(frequency, popup);
-			});
-			setPopup(frequency, popup);
+			if (frequency && popup) {
+				frequency.addEventListener('input', () => {
+					setPopup(frequency, popup, undefined);
+				});
+				setPopup(frequency, popup, undefined);
+			}
 		});
 
 		sampleFrequencyFull.subscribe((value) => {
 			const allRanges = document.querySelectorAll('.frequency-wrap');
 			if (allRanges.length > 0) {
-				const frequency = allRanges[0].querySelector('#sampleFrequency');
-				const popup = allRanges[0].querySelector('.frequencyPopup');
+				const frequency: HTMLInputElement | null = allRanges[0].querySelector('#sampleFrequency');
+				const popup: HTMLOutputElement | null = allRanges[0].querySelector('.frequencyPopup');
 
-				setPopup(frequency, popup, value);
+				if (frequency && popup) {
+					setPopup(frequency, popup, value);
+				}
 			}
 		});
 	});
@@ -43,7 +52,7 @@
 		type="range"
 		name="frequency"
 		id="sampleFrequency"
-		disabled={enableFields ? null : 'disabled'}
+		disabled={!enableFields}
 		min="15"
 		max="1440"
 		bind:value={$sampleFrequencyFull}
