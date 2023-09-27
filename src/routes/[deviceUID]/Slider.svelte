@@ -75,6 +75,32 @@
 		background: var(--backgroundWhite);
 	}
 
+	input[type='range']::-webkit-slider-runnable-track {
+		width: 100%;
+		height: 2px;
+		cursor: pointer;
+		background: var(--inputLightBlue);
+		border-radius: 25px;
+	}
+	input[type='range']::-moz-range-track {
+		background: var(--inputLightBlue);
+		height: 2px;
+	}
+	input[type='range']::-webkit-slider-thumb {
+		height: 20px;
+		width: 20px;
+		border-radius: 50%;
+		background: var(--notehubBlue);
+		box-shadow: 0 0 4px 0 var(--lightestGray);
+		cursor: pointer;
+		-webkit-appearance: none;
+		margin-top: -8px;
+	}
+	input[type='range']:disabled::-webkit-slider-thumb {
+		cursor: default;
+		background: var(--grey);
+	}
+
 	.frequencyPopup {
 		color: var(--notehubBlue);
 		font-weight: 600;

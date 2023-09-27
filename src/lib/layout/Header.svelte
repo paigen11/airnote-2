@@ -82,9 +82,7 @@
 		align-items: center;
 		display: none;
 	}
-	header .svg-button svg {
-		color: var(--white);
-	}
+
 	header .svg-button,
 	header .svg-button svg {
 		/* Safari requires the height on both for whatever reason */

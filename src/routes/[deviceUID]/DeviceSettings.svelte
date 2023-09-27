@@ -91,4 +91,15 @@
 	.form-buttons {
 		text-align: center;
 	}
+
+	input[type='checkbox'] {
+		width: auto;
+		margin-right: 0.25rem;
+		padding: 0;
+		vertical-align: -webkit-baseline-middle;
+	}
+
+	.checkbox-label {
+		margin-top: 1rem;
+	}
 </style>
