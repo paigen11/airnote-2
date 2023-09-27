@@ -1,5 +1,6 @@
 import * as NotehubJs from '@blues-inc/notehub-js';
 import { HUB_AUTH_TOKEN } from '$env/static/private';
+import type { DeviceEnvVars } from './DeviceEnvVarModel';
 
 const AIRNOTE_PROJECT_UID = 'app:2606f411-dea6-44a0-9743-1130f57d77d8';
 
@@ -23,7 +24,7 @@ export async function getDeviceEnvironmentVariablesByPin(deviceUID: string, pinN
 export async function updateDeviceEnvironmentVariablesByPin(
 	deviceUID: string,
 	pinNumber: string,
-	environmentVariables
+	environmentVariables: DeviceEnvVars
 ) {
 	const { pin } = notehubJsClient.authentications;
 	pin.apiKey = pinNumber;

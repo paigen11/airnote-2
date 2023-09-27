@@ -8,10 +8,10 @@
 
 	const dispatch = createEventDispatcher();
 
-	let formResponse: { success: string; error: string };
-	$: if (formResponse?.success) {
+	let formResponse: string;
+	$: if (formResponse === 'success') {
 		dispatch('settingsSaved');
-	} else if (formResponse?.error) {
+	} else if (formResponse === 'failure') {
 		dispatch('settingsError');
 	}
 </script>
@@ -22,8 +22,7 @@
 	method="POST"
 	use:enhance={() => {
 		return async ({ result }) => {
-			console.log('result', result);
-			formResponse = result.data;
+			formResponse = result.type;
 		};
 	}}
 	action="?&pin={pin}&/saveSettings"

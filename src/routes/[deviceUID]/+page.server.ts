@@ -1,3 +1,4 @@
+import { fail } from '@sveltejs/kit';
 import {
 	getDeviceEnvironmentVariables,
 	getDeviceEnvironmentVariablesByPin,
@@ -16,6 +17,7 @@ import {
 	contactAffiliation
 } from '$lib/stores/settingsStore';
 import { get } from 'svelte/store';
+import type { DeviceEnvVars } from '$lib/services/DeviceEnvVarModel.js';
 
 export async function load({ params, url }) {
 	const deviceUID = params.deviceUID;
@@ -58,7 +60,7 @@ export const actions = {
 		const deviceUID = params.deviceUID;
 		const pin = url.searchParams.get('pin');
 		const body = await request.formData();
-		const formattedBody = createEnvVarBody(body);
+		const formattedBody: DeviceEnvVars = createEnvVarBody(body);
 		if (pin === '') {
 			error = { errorType: ERROR_TYPE.MISSING_PIN };
 		} else if (pin !== null) {
@@ -69,7 +71,7 @@ export const actions = {
 
 			if (notehubError) {
 				error = { errorType: ERROR_TYPE.UPDATE_ERROR };
-				return { error };
+				return fail(500, { error });
 			}
 
 			return { success: true };
@@ -77,7 +79,7 @@ export const actions = {
 	}
 };
 
-function createEnvVarBody(formData) {
+function createEnvVarBody(formData: FormData) {
 	return {
 		_sn: formData.get('deviceName') ? formData.get('deviceName') : get(deviceName),
 		_air_mins: `usb:${get(sampleFrequencyUSB)};high:${

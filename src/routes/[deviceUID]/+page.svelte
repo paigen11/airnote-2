@@ -52,7 +52,7 @@
 		enableFields = true;
 	}
 
-	const updateSettingsFromEnvVars = (data) => {
+	const updateSettingsFromEnvVars = (data: { [property: string]: string }) => {
 		if (data['_sn']) $deviceName = data['_sn'];
 		if (data['_air_mins']) {
 			// Split semi-colon list into an array for parsing and reassembly
