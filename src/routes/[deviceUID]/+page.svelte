@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { NotificationDisplay } from '@beyonk/svelte-notifications';
+	import { NotificationDisplay, notifier } from '@beyonk/svelte-notifications';
 	import { APP_UID, RADNOTE_PRODUCT_UID } from '$lib/constants';
 	import { getCurrentDeviceFromUrl } from '$lib/services/device';
 	import DeviceSettings from './DeviceSettings.svelte';
@@ -30,21 +30,23 @@
 	let enableFields = false;
 	let error = false;
 	let errorType: string;
-	let notify;
 
 	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
 
 	export let data;
-	const { environment_variables, unauthorizedError } = data;
 
-	if (unauthorizedError !== undefined) {
-		if (unauthorizedError.errorType === 'No PIN') {
+	if (data.error !== undefined) {
+		if (data.error.errorType === ERROR_TYPE.MISSING_PIN) {
 			error = true;
 			errorType = ERROR_TYPE.MISSING_PIN;
 		}
-		if (unauthorizedError.errorType === 'PIN is incorrect') {
+		if (data.error.errorType === ERROR_TYPE.INVALID_PIN) {
 			error = true;
 			errorType = ERROR_TYPE.INVALID_PIN;
+		}
+		if (data.error.errorType === ERROR_TYPE.NOTEHUB_ERROR) {
+			error = true;
+			errorType = ERROR_TYPE.NOTEHUB_ERROR;
 		}
 	} else {
 		enableFields = true;
@@ -78,8 +80,8 @@
 		if (data['_contact_affiliation']) $contactAffiliation = data['_contact_affiliation'];
 	};
 
-	if (environment_variables) {
-		updateSettingsFromEnvVars(environment_variables);
+	if (data.notehubResponse) {
+		updateSettingsFromEnvVars(data.notehubResponse);
 	}
 
 	if (productUID === RADNOTE_PRODUCT_UID) {
@@ -99,37 +101,13 @@
 		deviceDisplayOptions.push({ value: 'pm10.0', text: 'PM10.0' });
 	}
 
-	const handleSettingsSave = () => {
-		// const varsBody = createBodyFromStore();
-		// updateDeviceEnvVars(productUID, deviceUID, pin, varsBody)
-		//   .then((data) => {
-		//     if (data.successfullyUpdated) {
-		//       notifier.success("Settings saved.");
-		//     } else {
-		//       error = true;
-		//       errorType = ERROR_TYPE.UPDATE_ERROR;
-		//     }
-		//   })
-		//   .catch((err) => {
-		//     console.error(err);
-		//     error = true;
-		//     errorType = ERROR_TYPE.NOTEHUB_ERROR;
-		//   });
+	const handleSettingsSaved = () => {
+		notifier.success('Settings saved.', 3000);
 	};
 
-	// move this too
-	const createBodyFromStore = () => {
-		// return {
-		//   environment_variables: {
-		//     _sn: $deviceName,
-		//     _air_mins: `usb:${$sampleFrequencyUSB};high:${$sampleFrequencyFull};normal:${$sampleFrequencyFull};low:${$sampleFrequencyLow};43200`,
-		//     _air_indoors: !!$indoorDevice ? "1" : "0",
-		//     _air_status: $displayValue,
-		//     _contact_name: $contactName,
-		//     _contact_email: $contactEmail,
-		//     _contact_affiliation: $contactAffiliation,
-		//   },
-		// };
+	const handleSettingsError = () => {
+		error = true;
+		errorType = ERROR_TYPE.UPDATE_ERROR;
 	};
 
 	onMount(() => {
@@ -173,16 +151,27 @@
 
 <hr />
 
-<NotificationDisplay bind:this={notify} />
+<NotificationDisplay />
 
 <section>
-	<DeviceSettings {enableFields} {deviceDisplayOptions} on:submit={handleSettingsSave} />
+	<DeviceSettings
+		{enableFields}
+		{deviceDisplayOptions}
+		on:settingsSaved={() => handleSettingsSaved()}
+		on:settingsError={() => handleSettingsError()}
+		{pin}
+	/>
 </section>
 
 <hr />
 
 <section>
-	<DeviceOwner {enableFields} on:submit={handleSettingsSave} />
+	<DeviceOwner
+		{enableFields}
+		on:settingsSaved={() => handleSettingsSaved()}
+		on:settingsError={() => handleSettingsError()}
+		{pin}
+	/>
 </section>
 
 <hr />

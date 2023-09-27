@@ -13,11 +13,26 @@ export async function getDeviceEnvironmentVariables(deviceUID: string) {
 	return await deviceApiInstance.getDeviceEnvironmentVariables(AIRNOTE_PROJECT_UID, deviceUID);
 }
 
-// ready and write env vars
+// read and write env vars
 export async function getDeviceEnvironmentVariablesByPin(deviceUID: string, pinNumber: string) {
 	const { pin } = notehubJsClient.authentications;
 	pin.apiKey = pinNumber;
 	return await deviceApiInstance.getDeviceEnvironmentVariablesByPin(AIRNOTE_PROJECT_UID, deviceUID);
+}
+
+export async function updateDeviceEnvironmentVariablesByPin(
+	deviceUID: string,
+	pinNumber: string,
+	environmentVariables
+) {
+	const { pin } = notehubJsClient.authentications;
+	pin.apiKey = pinNumber;
+	const deviceEnvironmentVariables = new NotehubJs.EnvironmentVariables(environmentVariables);
+	return await deviceApiInstance.putDeviceEnvironmentVariablesByPin(
+		AIRNOTE_PROJECT_UID,
+		deviceUID,
+		deviceEnvironmentVariables
+	);
 }
 
 export async function getEvents(deviceUID: string) {

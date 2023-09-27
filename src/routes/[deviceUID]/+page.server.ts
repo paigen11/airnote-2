@@ -1,51 +1,106 @@
-import { error } from '@sveltejs/kit';
 import {
 	getDeviceEnvironmentVariables,
-	getDeviceEnvironmentVariablesByPin
+	getDeviceEnvironmentVariablesByPin,
+	updateDeviceEnvironmentVariablesByPin
 } from '$lib/services/notehub';
+import { ERROR_TYPE } from '$lib/constants/ErrorTypes.js';
+import {
+	deviceName,
+	displayValue,
+	indoorDevice,
+	sampleFrequencyFull,
+	sampleFrequencyLow,
+	sampleFrequencyUSB,
+	contactName,
+	contactEmail,
+	contactAffiliation
+} from '$lib/stores/settingsStore';
+import { get } from 'svelte/store';
 
 export async function load({ params, url }) {
 	const deviceUID = params.deviceUID;
 	const pin = url.searchParams.get('pin');
 
-	let erred = false;
 	let notehubError: { status: number } | undefined;
-	let unauthorizedError: { errorType: string } | undefined;
+	let error;
+	let notehubResponse;
 
 	const envVarResponse = await getDeviceEnvironmentVariables(deviceUID).catch((err) => {
 		console.error(err);
-		erred = true;
 		notehubError = err;
 	});
-	const { environment_variables } = envVarResponse;
+
+	if (envVarResponse) {
+		notehubResponse = envVarResponse.environment_variables;
+	}
 
 	if (pin === '') {
-		unauthorizedError = { errorType: 'No PIN' };
+		error = { errorType: ERROR_TYPE.MISSING_PIN };
 	} else if (pin !== null) {
 		await getDeviceEnvironmentVariablesByPin(deviceUID, pin).catch((err) => {
 			console.error(err);
-			unauthorizedError = { errorType: 'PIN is incorrect' };
-			return unauthorizedError;
+			error = { errorType: ERROR_TYPE.INVALID_PIN };
 		});
 	}
 
-	if (erred) {
-		if (notehubError) {
-			if (notehubError.status === 404) {
-				throw error(404, {
-					message: 'Device not found',
-					errorType: 'Notehub error',
-					deviceUID
-				});
-			} else {
-				throw error(500, {
-					message: 'Error fetching data from Notehub',
-					errorType: 'Notehub error',
-					deviceUID
-				});
-			}
-		}
-	} else {
-		return { environment_variables, unauthorizedError };
+	if (notehubError) {
+		error = { errorType: ERROR_TYPE.NOTEHUB_ERROR };
 	}
+
+	return { notehubResponse, error };
+}
+
+export const actions = {
+	saveSettings: async ({ params, url, request }) => {
+		let notehubError: { status: number } | undefined;
+		let error;
+
+		const deviceUID = params.deviceUID;
+		const pin = url.searchParams.get('pin');
+		const body = await request.formData();
+		const formattedBody = createEnvVarBody(body);
+		if (pin === '') {
+			error = { errorType: ERROR_TYPE.MISSING_PIN };
+		} else if (pin !== null) {
+			await updateDeviceEnvironmentVariablesByPin(deviceUID, pin, formattedBody).catch((err) => {
+				console.error(err);
+				notehubError = err;
+			});
+
+			if (notehubError) {
+				error = { errorType: ERROR_TYPE.UPDATE_ERROR };
+				return { error };
+			}
+
+			return { success: true };
+		}
+	}
+};
+
+function createEnvVarBody(formData) {
+	return {
+		_sn: formData.get('deviceName') ? formData.get('deviceName') : get(deviceName),
+		_air_mins: `usb:${get(sampleFrequencyUSB)};high:${
+			formData.get('sampleFrequencyFull')
+				? formData.get('sampleFrequencyFull')
+				: get(sampleFrequencyFull)
+		};normal:${
+			formData.get('sampleFrequencyFull')
+				? formData.get('sampleFrequencyFull')
+				: get(sampleFrequencyFull)
+		};low:${get(sampleFrequencyLow)};43200`,
+		_air_indoors: formData.get('indoorDevice')
+			? formData.get('indoorDevice') === 'on'
+				? '1'
+				: '0'
+			: get(indoorDevice)
+			? '1'
+			: '0',
+		_air_status: formData.get('displayValue') ? formData.get('displayValue') : get(displayValue),
+		_contact_name: formData.get('contactName') ? formData.get('contactName') : get(contactName),
+		_contact_email: formData.get('contactEmail') ? formData.get('contactEmail') : get(contactEmail),
+		_contact_affiliation: formData.get('contactAffiliation')
+			? formData.get('contactAffiliation')
+			: get(contactAffiliation)
+	};
 }

@@ -1,29 +1,41 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { enhance } from '$app/forms';
 	import Slider from './Slider.svelte';
 	import { deviceName, displayValue, indoorDevice } from '$lib/stores/settingsStore';
 	import type { DeviceDisplayOption } from '$lib/services/DeviceDisplayModel';
 
-	const dispatch = createEventDispatcher();
-
 	export let enableFields: boolean;
 	export let deviceDisplayOptions: DeviceDisplayOption[] = [];
+	export let pin: string | (string | null)[] = '';
 
-	const save = (event: { preventDefault: () => void }) => {
-		event.preventDefault();
-		dispatch('submit');
-	};
+	const dispatch = createEventDispatcher();
+
+	let formResponse: { success: string; error: string };
+	$: if (formResponse?.success) {
+		dispatch('settingsSaved');
+	} else if (formResponse?.error) {
+		dispatch('settingsError');
+	}
 </script>
 
 <h4 data-cy="device-settings-title">Device Settings</h4>
 
-<form on:submit={save}>
+<form
+	method="POST"
+	use:enhance={() => {
+		return async ({ result }) => {
+			formResponse = result.data;
+		};
+	}}
+	action="?&pin={pin}&/saveSettings"
+>
 	<div>
 		<label for="deviceName">Device name</label>
 		<input
 			disabled={!enableFields}
 			type="text"
-			name="name"
+			name="deviceName"
 			id="deviceName"
 			bind:value={$deviceName}
 			placeholder="my-airnote-name"
@@ -32,7 +44,12 @@
 
 	<div>
 		<label for="displayValue"> Airnote screen display value </label>
-		<select disabled={!enableFields} bind:value={$displayValue} name="display" id="displayValue">
+		<select
+			disabled={!enableFields}
+			bind:value={$displayValue}
+			name="displayValue"
+			id="displayValue"
+		>
 			{#each deviceDisplayOptions as option}
 				<option value={option['value']}>{option['text']}</option>
 			{/each}
@@ -50,7 +67,7 @@
 				disabled={!enableFields}
 				bind:checked={$indoorDevice}
 				type="checkbox"
-				name="indoor"
+				name="indoorDevice"
 				id="indoorDevice"
 			/>
 			<span> Indoor device (Will not be visible on the Safecast global map) </span>

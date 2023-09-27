@@ -1,26 +1,39 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { enhance } from '$app/forms';
 	import { contactName, contactEmail, contactAffiliation } from '$lib/stores/settingsStore';
+
+	export let enableFields: boolean;
+	export let pin: string | (string | null)[] = '';
 
 	const dispatch = createEventDispatcher();
 
-	export let enableFields: boolean;
-
-	const save = (event: { preventDefault: () => void }) => {
-		event.preventDefault();
-		dispatch('submit');
-	};
+	let formResponse: { success: string; error: string };
+	$: if (formResponse?.success) {
+		dispatch('settingsSaved');
+	} else if (formResponse?.error) {
+		dispatch('settingsError');
+	}
 </script>
 
 <h4 data-cy="device-owner-title">Device Owner Info</h4>
 
-<form on:submit={save}>
+<form
+	method="POST"
+	use:enhance={() => {
+		return async ({ result }) => {
+			console.log('result', result);
+			formResponse = result.data;
+		};
+	}}
+	action="?&pin={pin}&/saveSettings"
+>
 	<div>
 		<label for="ownerName">Name</label>
 		<input
 			disabled={!enableFields}
 			type="text"
-			name="ownerName"
+			name="contactName"
 			bind:value={$contactName}
 			id="ownerName"
 			placeholder="Ada Lovelace"
@@ -32,7 +45,7 @@
 		<input
 			disabled={!enableFields}
 			type="text"
-			name="companyName"
+			name="contactAffiliation"
 			bind:value={$contactAffiliation}
 			id="companyName"
 			placeholder="Blues Inc."
@@ -44,7 +57,7 @@
 		<input
 			disabled={!enableFields}
 			type="email"
-			name="ownerEmail"
+			name="contactEmail"
 			bind:value={$contactEmail}
 			id="ownerEmail"
 			placeholder="ada@blues.com"
