@@ -83,13 +83,6 @@
 		display: none;
 	}
 
-	header .svg-button,
-	header .svg-button svg {
-		/* Safari requires the height on both for whatever reason */
-		height: 2rem;
-		width: 2rem;
-	}
-
 	@media (max-width: 600px) {
 		header {
 			justify-content: space-between;

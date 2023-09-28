@@ -14,14 +14,26 @@ export async function getDeviceEnvironmentVariables(deviceUID: string) {
 	return await deviceApiInstance.getDeviceEnvironmentVariables(AIRNOTE_PROJECT_UID, deviceUID);
 }
 
-// read and write env vars
+// read env vars by pin
 export async function getDeviceEnvironmentVariablesByPin(deviceUID: string, pinNumber: string) {
 	const { pin } = notehubJsClient.authentications;
 	pin.apiKey = pinNumber;
 	return await deviceApiInstance.getDeviceEnvironmentVariablesByPin(AIRNOTE_PROJECT_UID, deviceUID);
 }
 
-export async function updateDeviceEnvironmentVariablesByPin(
+// delete env var by key on device
+async function deleteDeviceEnvironmentVariable(deviceUID: string, key: string) {
+	const { pin } = notehubJsClient.authentications;
+	pin.apiKey = HUB_AUTH_TOKEN;
+	return await deviceApiInstance.deleteDeviceEnvironmentVariable(
+		AIRNOTE_PROJECT_UID,
+		deviceUID,
+		key
+	);
+}
+
+// update env vars on device by pin
+async function putDeviceEnvironmentVariablesByPin(
 	deviceUID: string,
 	pinNumber: string,
 	environmentVariables: DeviceEnvVars
@@ -36,6 +48,25 @@ export async function updateDeviceEnvironmentVariablesByPin(
 	);
 }
 
+export async function updateDeviceEnvironmentVariablesByPin(
+	deviceUID: string,
+	pinNumber: string,
+	environmentVariables: DeviceEnvVars
+) {
+	// If the _air_mins environment variable is set to the default, don't save the value so
+	// the device defaults to the project-level _air_mins. Also, delete the environment variable
+	// on the device in case it already exists.
+	if (
+		environmentVariables._air_mins &&
+		environmentVariables._air_mins.toString().includes('high:30')
+	) {
+		delete environmentVariables._air_mins;
+		await deleteDeviceEnvironmentVariable(deviceUID, '_air_mins');
+	}
+	return await putDeviceEnvironmentVariablesByPin(deviceUID, pinNumber, environmentVariables);
+}
+
+// get events from Airnote project in Notehub
 export async function getEvents(deviceUID: string) {
 	/* this function is originally fetched on mount with 8 days' worth of data to
 		  populate the AQI average history with the previous week's data AND

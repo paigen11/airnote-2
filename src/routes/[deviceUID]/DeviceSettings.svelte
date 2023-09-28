@@ -14,8 +14,10 @@
 	let formResponse: string;
 	$: if (formResponse === 'success') {
 		dispatch('settingsSaved');
+		formResponse = '';
 	} else if (formResponse === 'failure') {
 		dispatch('settingsError');
+		formResponse = '';
 	}
 </script>
 
