@@ -93,7 +93,7 @@ export function getCurrentDeviceFromUrl(location: Location) {
 	};
 
 	const query = queryString.parse(location.search);
-	let pin = query['pin'];
+	let pin = query['pin'] || '';
 	let productUID = query['product'] || AIRNOTE_PRODUCT_UID;
 	let deviceUID = location.pathname.match(/dev:\d*/)?.[0] || '';
 	const internalNav = query['internalNav'];

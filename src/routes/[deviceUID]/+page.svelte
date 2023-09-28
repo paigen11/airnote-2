@@ -31,7 +31,10 @@
 	let error = false;
 	let errorType: string;
 
-	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
+	let eventsUrl = `https://notehub.io/project/${APP_UID}/events`;
+	$: if (deviceUID) {
+		eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
+	}
 
 	export let data;
 

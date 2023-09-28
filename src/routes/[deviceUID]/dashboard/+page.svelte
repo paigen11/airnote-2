@@ -24,12 +24,14 @@
 	import TOOLTIP_STATES from '$lib/constants/TooltipStates';
 	import DATE_RANGE_OPTIONS from '$lib/constants/DateRangeOptions';
 	import { shareDashboard } from '$lib/util/share';
+	import { getCurrentDeviceFromUrl } from '$lib/services/device';
 	import { convertDateRange, dateRangeDisplayText, filterEventsByDate } from '$lib/util/dates';
 	import { getHeatIndex, toCelsius, toFahrenheit } from '$lib/services/air';
 	import { ERROR_TYPE } from '$lib/constants/ErrorTypes';
 	import type { AirnoteReading } from '$lib/services/AirReadingModel';
 	import type { AirnoteHistoryReadings } from '$lib/services/AirHistoryModel';
 	import { renderErrorMessage } from '$lib/util/errors';
+	import type { AirnoteDevice } from '$lib/services/DeviceModel';
 
 	export let deviceUID: string;
 
@@ -51,8 +53,11 @@
 	let tooltipState = TOOLTIP_STATES.CLOSED;
 	let selectedDateRange = DATE_RANGE_OPTIONS.SEVEN_DAYS.displayText;
 
-	let eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
+	let eventsUrl = `https://notehub.io/project/${APP_UID}/events`;
 
+	$: if (deviceUID) {
+		eventsUrl = `https://notehub.io/project/${APP_UID}/events?queryDevice=${deviceUID}`;
+	}
 	// data fetched from Notehub API via +page.server.ts on page load
 	export let data;
 
@@ -106,6 +111,8 @@
 	};
 
 	onMount(() => {
+		const currentDevice: AirnoteDevice = getCurrentDeviceFromUrl(location);
+		deviceUID = currentDevice.deviceUID ? currentDevice.deviceUID : '';
 		tempDisplay = localStorage.getItem('tempDisplay') || 'C';
 		showBanner = localStorage.getItem('showBanner') === 'false' ? false : true;
 	});

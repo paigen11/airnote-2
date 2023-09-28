@@ -74,7 +74,7 @@
 		bottom: 30px;
 		position: absolute;
 		color: var(--white);
-		height: 81px;
+		height: 87px;
 		width: 166px;
 		border-top-left-radius: 166px;
 		border-top-right-radius: 166px;
